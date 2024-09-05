@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>3dmodel.png</file>
+        <file>TestFiles/1 COL. TOP.txt</file>
+        <file>TestFiles/COL2.txt</file>
+        <file>TestFiles/URM COLUMN.txt</file>
+    </qresource>
+</RCC>

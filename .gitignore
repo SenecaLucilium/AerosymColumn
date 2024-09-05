@@ -1,0 +1,5 @@
+build/
+*.user
+*.user.29a95fb
+libjkqtplotterlib_debug.a
+libjkqtplotterlib.a
