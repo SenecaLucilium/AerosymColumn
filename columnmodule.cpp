@@ -191,7 +191,6 @@ void ColumnModule::addNewRow(Section& newSection)
     sectionsTable->setCellWidget(newRowIndex, 9, infoButton);
     connect(infoButton, &QPushButton::clicked, this, [this, newRowIndex, startComboBox, endComboBox]() {
         SectionDataModule* module = new SectionDataModule(column, newRowIndex, this);
-
     //     if (results.size() != 0) {
     //         std::vector <CalculationResults> subResults (results.begin() + startComboBox->currentIndex(), results.begin() + endComboBox->currentIndex() + 1);
     //         module->receiveResults(subResults);
@@ -202,9 +201,17 @@ void ColumnModule::addNewRow(Section& newSection)
     //         module->receiveMessages(subMessages);
     //     }
 
-    //     connect(module, &QDialog::finished, this, [this, newRowIndex](){
-    //         this->sectionChanged(newRowIndex);
-    //     });
+        connect(module, &QDialog::finished, this, [this, newRowIndex](){
+            ignoreSignals = true;
+            auto sieveSection = std::dynamic_pointer_cast<SieveSection>(column.sections[newRowIndex]);
+            qobject_cast<QComboBox*>(sectionsTable->cellWidget(newRowIndex, 3))->setCurrentText(sieveSection->calcType);
+            qobject_cast<QComboBox*>(sectionsTable->cellWidget(newRowIndex, 4))->setCurrentText(sieveSection->weirType);
+            qobject_cast<QComboBox*>(sectionsTable->cellWidget(newRowIndex, 5))->setCurrentText(QString::number(sieveSection->passesNumber));
+            sectionsTable->setItem(newRowIndex, 6, new QTableWidgetItem(QString::number(sieveSection->flowNumberCoeff)));
+            sectionsTable->setItem(newRowIndex, 7, new QTableWidgetItem(QString::number(sieveSection->weirDistance)));
+            sectionsTable->setItem(newRowIndex, 8, new QTableWidgetItem(QString::number(sieveSection->holeDiameter)));
+            ignoreSignals = false;
+        });
 
         module->show();
     });

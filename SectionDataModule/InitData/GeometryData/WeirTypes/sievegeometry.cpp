@@ -715,29 +715,33 @@ SieveGeometry::SieveGeometry(Column& column, int sectionIndex, QWidget *parent)
     });
 
     connect(columnDiameterComboBox, &QComboBox::currentTextChanged, this, [this, &column, sectionIndex]() {
-
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->columnDiameter = columnDiameterComboBox->currentText().toDouble();
     });
-    // connect(columnDiameterComboBox, &QComboBox::currentTextChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->columnDiameter = columnDiameterComboBox->currentText().toDouble();
-    // });
-    // connect(workingAreaLineEdit, &QLineEdit::textChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->workingArea = workingAreaLineEdit->text().toDouble();
-    // });
-    // connect(summaryAreaHoleLineEdit, &QLineEdit::textChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->summaryArea = summaryAreaHoleLineEdit->text().toDouble();
-    // });
-    // connect(percentAreaHoleLineEdit, &QLineEdit::textChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->percentArea = percentAreaHoleLineEdit->text().toDouble();
-    // });
-    // connect(perimeterLineEdit, &QLineEdit::textChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->perimeter = perimeterLineEdit->text().toDouble();
-    // });
-    // connect(widthOverflowLineEdit, &QLineEdit::textChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->widthOverflow = widthOverflowLineEdit->text().toDouble();
-    // });
-    // connect(crossSectionOverflowLineEdit, &QLineEdit::textChanged, this, [this, &sieveSection](){
-    //     std::dynamic_pointer_cast<SieveSectionVerification>(sieveSection)->crossSectionOverflow = crossSectionOverflowLineEdit->text().toDouble();
-    // });
+    connect(workingAreaLineEdit, &QLineEdit::textChanged, this, [this, &column, sectionIndex]() {
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->workingArea = workingAreaLineEdit->text().toDouble();
+    });
+    connect(summaryAreaHoleLineEdit, &QLineEdit::textChanged, this, [this, &column, sectionIndex]() {
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->summaryArea = summaryAreaHoleLineEdit->text().toDouble();
+    });
+    connect(percentAreaHoleLineEdit, &QLineEdit::textChanged, this, [this, &column, sectionIndex]() {
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->percentArea = percentAreaHoleLineEdit->text().toDouble();
+    });
+    connect(perimeterLineEdit, &QLineEdit::textChanged, this, [this, &column, sectionIndex]() {
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->perimeter = perimeterLineEdit->text().toDouble();
+    });
+    connect(widthOverflowLineEdit, &QLineEdit::textChanged, this, [this, &column, sectionIndex]() {
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->widthOverflow = widthOverflowLineEdit->text().toDouble();
+    });
+    connect(crossSectionOverflowLineEdit, &QLineEdit::textChanged, this, [this, &column, sectionIndex]() {
+        auto sieveSectionVerification = std::dynamic_pointer_cast<SieveSectionVerification>(column.sections[sectionIndex]);
+        sieveSectionVerification->crossSectionOverflow = crossSectionOverflowLineEdit->text().toDouble();
+    });
 }
 
 void SieveGeometry::updateAreaSection(const QString& text)
@@ -746,11 +750,11 @@ void SieveGeometry::updateAreaSection(const QString& text)
     double newValue;
 
     if(summaryAreaHoleRadio->isChecked()) {
-        newValue = (text.toDouble() / columnArea) * 100;
+        newValue = (summaryAreaHoleLineEdit->text().toDouble() / columnArea) * 100;
         percentAreaHoleLineEdit->setText(QString::number(newValue));
     }
     else {
-        newValue = (text.toDouble() * columnArea) / 100;
+        newValue = (percentAreaHoleLineEdit->text().toDouble() * columnArea) / 100;
         summaryAreaHoleLineEdit->setText(QString::number(newValue));
     }
 }

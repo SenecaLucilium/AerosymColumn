@@ -19,7 +19,6 @@ SOURCES += \
     SectionDataModule/InitData/SummaryData/summarydatatab.cpp \
     SectionDataModule/InitData/initialdatatab.cpp \
     SectionDataModule/Messages/messagestab.cpp \
-    SectionDataModule/Results/resultstab.cpp \
     SectionDataModule/sectiondatamodule.cpp \
     main.cpp \
     columnmodule.cpp
@@ -36,6 +35,7 @@ HEADERS += \
     SectionDataModule/InitData/SummaryData/summarydatatab.h \
     SectionDataModule/InitData/initialdatatab.h \
     SectionDataModule/Messages/messagestab.h \
+    SectionDataModule/Results/WeirTypes/sieveresults.h \
     SectionDataModule/Results/resultstab.h \
     SectionDataModule/sectiondatamodule.h \
     columnmodule.h \
