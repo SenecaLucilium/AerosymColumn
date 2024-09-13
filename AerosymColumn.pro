@@ -10,7 +10,6 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    # CalculationModule/calculationmodule.cpp \
     # GraphViewModule/graphviewmodule.cpp \
     # ResultsViewModule/resultsviewmodule.cpp \
     SectionDataModule/InitData/GeometryData/WeirTypes/sievegeometry.cpp \
@@ -24,7 +23,8 @@ SOURCES += \
     columnmodule.cpp
 
 HEADERS += \
-    # CalculationModule/calculationmodule.h \
+    CalculationModule/WeirTypes/sievecalculations.h \
+    CalculationModule/calculationmodule.h \
     # GraphViewModule/graphsectiondiagram.h \
     # GraphViewModule/graphviewmodule.h \
     # ResultsViewModule/resultsviewmodule.h \
