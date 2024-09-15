@@ -18,6 +18,18 @@ public:
             auto sieveSection = std::dynamic_pointer_cast<SieveSection>(section);
             for (auto& weir : sieveSection->weirs)
             {
+                nullData();
+                newInitData(column, sieveSection, weir);
+
+                if (calculateColumnDiameterData())
+                    if (calculateColumnSectionData())
+                        if (calculateWeirHydrResistData())
+                            if (calculateOverflowDeviceData()) {
+                                calculateCheckFlags();
+                                if (auto verificationSection = std::dynamic_pointer_cast<SieveSectionVerification>(section))
+                                    calculateVerificationFlags();
+                            }
+
 
             }
         }
@@ -25,6 +37,132 @@ public:
     ~SieveCalculations() {}
 
 private:
+    void nullData()
+    {
+        message.clear();
+        {
+            columnDiameterResults["loadFactor"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["loadCoeff"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["foamedRelativeDensity"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["maxGasSpeed"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["workingPlateArea"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["perimeter"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["perimeterTable"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["width"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["crossSection"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["freeColumnSection"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["columnDiameter"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["columnDiameterTable"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["acceptedPerimeter"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["acceptedWidth"] = std::numeric_limits<double>::lowest();
+            columnDiameterResults["acceptedCrossSection"] = std::numeric_limits<double>::lowest();
+        }
+        {
+            columnSectionResults["workingPlateArea"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["workingGasSpeed"] = std::numeric_limits<double>::lowest();
+
+            columnSectionResults["liquidConsumptionPerUnit_min"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["liquidConsumptionPerUnit_max"] = std::numeric_limits<double>::lowest();
+
+            // Существует Лв макс и Лв мин - для целостности кода я пока оставлю только Лв макс
+            columnSectionResults["liquidConsumptionPerUnit"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["stableRangeOperation"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["relativeFreePlateSection"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["areaColumn"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["columnSectionGasSpeed"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["calcRelativeFreeSection"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["weirHoleArea"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["acceptedRelativeColumnSection"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["liquidHoleSpeed"] = std::numeric_limits<double>::lowest();
+            columnSectionResults["minSteamHoleSpeed"] = std::numeric_limits<double>::lowest();
+        }
+        {
+            weirHydrResistResults["liquidDrainPlate_speed"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["steamHoleSpeed"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["liquidDrainPlate"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["minGasHoleSpeed"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["dryPlateResist"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["gasFlowLoss"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["totalPressureDrop"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["foamedLayerHeight"] = std::numeric_limits<double>::lowest();
+            weirHydrResistResults["nonFoamedLayerHeight"] = std::numeric_limits<double>::lowest();
+        }
+        {
+            overflowDeviceResults["fluidMovementResist"] = std::numeric_limits<double>::lowest();
+            overflowDeviceResults["passesNumberCoeff"] = std::numeric_limits<double>::lowest();
+            overflowDeviceResults["liquidAboveDrainPlate"] = std::numeric_limits<double>::lowest();
+            overflowDeviceResults["lightLiquidHeight"] = std::numeric_limits<double>::lowest();
+            overflowDeviceResults["foamedLayerHeight"] = std::numeric_limits<double>::lowest();
+            overflowDeviceResults["overflowDeviceHeight"] = std::numeric_limits<double>::lowest();
+        }
+        {
+            checkFlags["foamedHeight"] = false;
+            checkFlags["deviceHeight"] = false;
+            checkFlags["normalWork"] = false;
+            checkFlags["overflowDevice"] = false;
+            checkFlags["weirWork"] = false;
+            checkFlags["weirDistance"] = false;
+            checkFlags["gasSpeed"] = false;
+            checkFlags["liquidFlow"] = false;
+            checkFlags["gasHoleSpeed"] = false;
+        }
+        {
+            verificationFlags["active"] = false;
+            verificationFlags["columnDiameter"] = false;
+            verificationFlags["perimeter"] = false;
+            verificationFlags["crossSection"] = false;
+            verificationFlags["workingPlateArea"] = false;
+            verificationFlags["relativeColumnSection"] = false;
+        }
+    }
+    void newInitData(Column& column, std::shared_ptr<SieveSection> section, std::shared_ptr<SieveWeir> weir)
+    {
+        weirName = weir->name;
+        weirData["liquidLoad"] = weir->liquidLoad;
+        weirData["steamLoad"] = weir->steamLoad;
+        weirData["liquidDensity"] = weir->liquidDensity;
+        weirData["steamDensity"] = weir->steamDensity;
+        weirData["liquidSurfaceTension"] = weir->liquidSurfaceTension;
+
+        geometryData["holeDiameter"] = section->holeDiameter;
+        geometryData["platesDistance"] = section->weirDistance;
+        geometryData["passesNumber"] = section->passesNumber;
+
+        if (auto verificationSection = std::dynamic_pointer_cast<SieveSectionVerification>(section))
+        {
+            typeData["calcType"] = "Поверочный";
+            geometryData["summaryArea"] = verificationSection->summaryArea;
+            geometryData["columnDiameter"] = verificationSection->columnDiameter;
+            geometryData["perimeter"] = verificationSection->perimeter;
+            geometryData["widthOverflow"] = verificationSection->widthOverflow;
+            geometryData["workingArea"] = verificationSection->workingArea;
+            geometryData["percentArea"] = verificationSection->percentArea;
+        }
+        else typeData["calcType"] = "Проектный";
+
+        fluidsData["foamingCoeff"] = column.foamingCoeff;
+        fluidsData["liquidFlow"] = column.liquidFlow;
+
+        constantsData["reliabilityCoeff"] = column.reliabilityCoeff;
+        constantsData["occupiedAreaCoeff"] = column.occupiedAreaCoeff;
+        constantsData["overflowBarHeight"] = column.overflowBarHeight;
+        constantsData["reserveCoeff"] = column.reserveCoeff;
+        constantsData["flowCoeff"] = column.flowCoeff;
+
+        constantsData["dryResistCoeff_speed"] = 1.8;
+        if (weir->weirWidth == 0.00635) constantsData["dryResistCoeff_resist"] = 1.81;
+        else if (weir->weirWidth == 0.00635) constantsData["dryResistCoeff_resist"] = 1.80;
+        else if (weir->weirWidth == 0.002642) constantsData["dryResistCoeff_resist"] = 1.79;
+        else constantsData["dryResistCoeff_resist"] = 1.77;
+
+        constantsData["boltHeight"] = column.boltHeight;
+        constantsData["overflowResistCoeff"] = column.overflowResistCoeff;
+    }
+    void handleError (const QString& errorMessage, int errorLevel)
+    {
+        message.push_back({errorLevel, weirName + " - " + errorMessage});
+    }
+
     std::vector <std::shared_ptr<SieveCalculationResults>> results;
     std::vector <std::vector <std::pair<int, QString>>> messages;
     std::vector <std::pair <int, QString>> message;
