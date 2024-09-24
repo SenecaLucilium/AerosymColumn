@@ -1,18 +1,19 @@
-#ifndef SIEVECALCULATIONS_H
-#define SIEVECALCULATIONS_H
+#ifndef SIEVECALCULATION_H
+#define SIEVECALCULATION_H
 
 #include <QObject>
+#include "calculationbase.h"
 #include "../../datatypes.h"
 
-class SieveCalculations : public QObject
+class SieveCalculations : public CalculationBase
 {
     Q_OBJECT
 public:
-    explicit SieveCalculations(Column& column, QObject *parent = nullptr)
-    {
-        results.clear();
-        messages.clear();
+    explicit SieveCalculations(Column& column, std::shared_ptr<SieveSection> section, QObject *parent = nullptr)
+        : CalculationBase(column, std::static_pointer_cast<Section>(section), parent) { results.clear(); messages.clear(); }
 
+    void initialize(Column& column)
+    {
         for (auto& section : column.sections)
         {
             auto sieveSection = std::dynamic_pointer_cast<SieveSection>(section);
@@ -26,18 +27,96 @@ public:
                         if (calculateWeirHydrResistData())
                             if (calculateOverflowDeviceData()) {
                                 calculateCheckFlags();
-                                if (auto verificationSection = std::dynamic_pointer_cast<SieveSectionVerification>(section))
+                                if (section->calcType == "Поверочный")
                                     calculateVerificationFlags();
                             }
 
+                std::shared_ptr<SieveCalculationResults> result;
+                if (section->calcType == "Поверочный")
+                    result = std::make_shared<SieveCalculationResultsVerification>();
+                else result = std::make_shared<SieveCalculationResults>();
+                result->weirName = weir->name;
+                {
+                    result->loadFactor = columnDiameterResults["loadFactor"];
+                    result->loadCoeff = columnDiameterResults["loadCoeff"];
+                    result->foamedRelativeDensity = columnDiameterResults["foamedRelativeDensity"];
+                    result->maxGasSpeed = columnDiameterResults["maxGasSpeed"];
+                    result->workingPlateArea_diameter = columnDiameterResults["workingPlateArea"];
+                    result->perimeter = columnDiameterResults["perimeter"];
+                    result->perimeterTable = columnDiameterResults["perimeterTable"];
+                    result->width = columnDiameterResults["width"];
+                    result->crossSection = columnDiameterResults["crossSection"];
+                    result->freeColumnSection = columnDiameterResults["freeColumnSection"];
+                    result->columnDiameter = columnDiameterResults["columnDiameter"];
+                    result->columnDiameterTable = columnDiameterResults["columnDiameterTable"];
+                    result->acceptedPerimeter = columnDiameterResults["acceptedPerimeter"];
+                    result->acceptedWidth = columnDiameterResults["acceptedWidth"];
+                    result->acceptedCrossSection = columnDiameterResults["acceptedCrossSection"];
+                }
+                {
+                    result->workingPlateArea_section = columnSectionResults["workingPlateArea"];
+                    result->workingGasSpeed = columnSectionResults["workingGasSpeed"];
+                    result->liquidConsumptionPerUnit = columnSectionResults["liquidConsumptionPerUnit"];
+                    result->stableRangeOperation = columnSectionResults["stableRangeOperation"];
+                    result->relativeFreePlateSection = columnSectionResults["relativeFreePlateSection"];
+                    result->areaColumn = columnSectionResults["areaColumn"];
+                    result->columnSectionGasSpeed = columnSectionResults["columnSectionGasSpeed"];
+                    result->calcRelativeFreeSection = columnSectionResults["calcRelativeFreeSection"];
+                    result->weirHoleArea = columnSectionResults["weirHoleArea"];
+                    result->acceptedRelativeColumnSection = columnSectionResults["acceptedRelativeColumnSection"];
+                    result->liquidHoleSpeed = columnSectionResults["liquidHoleSpeed"];
+                    result->minSteamHoleSpeed = columnSectionResults["minSteamHoleSpeed"];
+                }
+                {
+                    result->liquidDrainPlate_speed = weirHydrResistResults["liquidDrainPlate_speed"];
+                    result->steamHoleSpeed = weirHydrResistResults["steamHoleSpeed"];
+                    result->liquidDrainPlate = weirHydrResistResults["liquidDrainPlate"];
+                    result->minGasHoleSpeed = weirHydrResistResults["minGasHoleSpeed"];
+                    result->dryPlateResist = weirHydrResistResults["dryPlateResist"];
+                    result->gasFlowLoss = weirHydrResistResults["gasFlowLoss"];
+                    result->totalPressureDrop = weirHydrResistResults["totalPressureDrop"];
+                    result->foamedLayerHeight_weir = weirHydrResistResults["foamedLayerHeight"];
+                    result->nonFoamedLayerHeight = weirHydrResistResults["nonFoamedLayerHeight"];
+                }
+                {
+                    result->fluidMovementResist = overflowDeviceResults["fluidMovementResist"];
+                    result->passesNumberCoeff = overflowDeviceResults["passesNumberCoeff"];
+                    result->liquidAboveDrainPlate = overflowDeviceResults["liquidAboveDrainPlate"];
+                    result->lightLiquidHeight = overflowDeviceResults["lightLiquidHeight"];
+                    result->foamedLayerHeight_device = overflowDeviceResults["foamedLayerHeight"];
+                    result->overflowDeviceHeight = overflowDeviceResults["overflowDeviceHeight"];
+                }
+                {
+                    result->condition_foamedHeight = checkFlags["foamedHeight"];
+                    result->condition_deviceHeight = checkFlags["deviceHeight"];
+                    result->condition_normalWork = checkFlags["normalWork"];
+                    result->condition_overflowDevice = checkFlags["overflowDevice"];
+                    result->condition_weirWork = checkFlags["weirWork"];
+                    result->condition_weirDistance = checkFlags["weirDistance"];
+                    result->condition_gasSpeed = checkFlags["gasSpeed"];
+                    result->condition_liquidFlow = checkFlags["liquidFlow"];
+                    result->condition_gasHoleSpeed = checkFlags["gasHoleSpeed"];
+                }
+                if (section->calcType == "Поверочный")
+                {
+                    auto verificationResult = std::static_pointer_cast<SieveCalculationResultsVerification>(result);
+                    verificationResult->verification_columnDiameter = verificationFlags["columnDiameter"];
+                    verificationResult->verification_perimeter = verificationFlags["perimeter"];
+                    verificationResult->verification_crossSection = verificationFlags["crossSection"];
+                    verificationResult->verification_workingPlateArea = verificationFlags["workingPlateArea"];
+                    verificationResult->verification_relativeColumnSection = verificationFlags["relativeColumnSection"];
+                }
 
+                results.push_back(result);
+                messages.push_back(message);
             }
         }
     }
-    ~SieveCalculations() {}
 
-private:
-    void nullData()
+    ~SieveCalculations() {};
+
+protected:
+    void nullData() override
     {
         message.clear();
         {
@@ -115,6 +194,9 @@ private:
             verificationFlags["relativeColumnSection"] = false;
         }
     }
+
+    void newInitData() override {}
+
     void newInitData(Column& column, std::shared_ptr<SieveSection> section, std::shared_ptr<SieveWeir> weir)
     {
         weirName = weir->name;
@@ -158,23 +240,134 @@ private:
         constantsData["boltHeight"] = column.boltHeight;
         constantsData["overflowResistCoeff"] = column.overflowResistCoeff;
     }
-    void handleError (const QString& errorMessage, int errorLevel)
+
+    bool checkInitData() override
     {
-        message.push_back({errorLevel, weirName + " - " + errorMessage});
+        // geometryData
+        if (geometryData["holeDiameter"] < 0.005 || geometryData["holeDiameter"] > 0.025) {
+            handleError ("Ошибка во входных данных - диаметр отверстия.", 2);
+            handleError ("Поддерживаемые значения диаметра отверстия от 0.005м до 0.025м.", 0);
+            return false;
+        }
+        if (geometryData["platesDistance"] < 500 || geometryData["platesDistance"] > 800) {
+            handleError ("Ошибка во входных данных - расстояние между тарелками.", 2);
+            handleError ("Поддерживаемые значения расстояния между тарелками от 500мм до 800мм.", 0);
+            return false;
+        }
+
+        if (typeData["calcMode"] == "Поверочный") {
+            // Проверка тех значений, что дает поверочный рассчёт
+            if (geometryData["columnDiameter"] <= 0.0 || geometryData["columnDiameter"] > 3.6) {
+                handleError ("Ошибка во входных данных - диаметр колонны.", 2);
+                handleError ("Поддерживаемые значения диаметра колонны от 1м до 3.6м.", 0);
+                return false;
+            }
+            if (geometryData["perimeter"] <= 0) {
+                handleError ("Ошибка во входных данных - периметр слива.", 2);
+                return false;
+            }
+            if (geometryData["widthOverflow"] <= 0) {
+                handleError ("Ошибка во входных данных - ширина перелива.", 2);
+                return false;
+            }
+            if (geometryData["workingArea"] <= 0) {
+                handleError ("Ошибка во входных данных - рабочая площадь тарелки.", 2);
+                return false;
+            }
+
+            if (geometryData["percentArea"] <= 0 || geometryData["percentArea"] >= 100) {
+                handleError ("Ошибка во входных данных - относительное свободное сечение колонны.", 2);
+                handleError ("Поддерживаемые значения относительного свободного сечения колонны от 0% до 100%.", 0);
+                return false;
+            }
+
+            double b_in = geometryData["perimeter"];
+            double S_in = geometryData["widthOverflow"];
+            double F_of_in = b_in * S_in / 2000.0;
+            double F_w_in = geometryData["workingArea"];
+            double D_in = geometryData["columnDiameter"];
+            double F_col_in = 0.785 * D_in * D_in;
+            if (F_of_in + F_w_in >= F_col_in) {
+                handleError ("Ошибка. Сумма сечения перелива и рабочей площади тарелки должна быть меньше полного сечения колонны.", 2);
+                handleError ("Проверьте корректность входных данных - диаметр колонны, периметр слива, ширина перелива, рабочая площадь тарелки.", 0);
+                return false;
+            }
+        }
+
+        // fluidsData
+        if (weirData["liquidLoad"] <= 0) {
+            handleError ("Ошибка во входных данных - нагрузка по жидкости.", 2);
+            return false;
+        }
+        if (weirData["steamLoad"] <= 0) {
+            handleError ("Ошибка во входных данных - нагрузка по пару.", 2);
+            return false;
+        }
+
+        if (weirData["liquidDensity"] <= 0) {
+            handleError ("Ошибка во входных данных - плотность жидкости.", 2);
+            return false;
+        }
+        if (weirData["steamDensity"] <= 0) {
+            handleError ("Ошибка во входных данных - плотность пара.", 2);
+            return false;
+        }
+        if (weirData["liquidSurfaceTension"] <= 0) {
+            handleError ("Ошибка во входных данных - поверхностное натяжение жидкости.", 2);
+            return false;
+        }
+
+        if (fluidsData["liquidFlow"] <= 0) {
+            handleError ("Ошибка во входных данных - расход жидкости на единицу длины сливной планки.", 2);
+            return false;
+        }
+        if (!(fluidsData["foamingCoeff"] == 0.9 || fluidsData["foamingCoeff"] == 0.85 || fluidsData["foamingCoeff"] == 0.75)) {
+            handleError ("Ошибка во входных данных - коэффициент вспениваемости.", 2);
+            handleError ("Поддерживаемые значения коэффициента вспениваемости: 0.9, 0.85, 0.75.", 0);
+            return false;
+        }
+
+        //constantsData
+        if (constantsData["overflowBarHeight"] <= 0) {
+            handleError ("Ошибка во входных данных - высота переливной планки.", 2);
+            return false;
+        }
+        if (constantsData["boltHeight"] <= 0) {
+            handleError ("Ошибка во входных данных - высота затворной планки.", 2);
+            return false;
+        }
+        if (constantsData["flowCoeff"] <= 0) {
+            handleError ("Ошибка во входных данных - коэффициент расхода.", 2);
+            return false;
+        }
+        // if (constantsData["dryResistCoeff"] <= 0) {
+        //     handleError ("Ошибка во входных данных - коэффициент сопротивления сухой тарелки.", 2);
+        //     return false;
+        // }
+        if (constantsData["overflowResistCoeff"] <= 0) {
+            handleError ("Ошибка во входных данных - коэффициент сопротивления перелива.", 2);
+            return false;
+        }
+        if (constantsData["occupiedAreaCoeff"] <= 0) {
+            handleError ("Ошибка во входных данных - коэффициент площади опорных конструкций тарелки.", 2);
+            return false;
+        }
+        if (constantsData["reliabilityCoeff"] <= 0 || constantsData["reliabilityCoeff"] > 1) {
+            handleError ("Ошибка во входных данных - коэффициент надежности.", 2);
+            return false;
+        }
+        if (constantsData["reserveCoeff"] <= 0 || constantsData["reserveCoeff"] > 1) {
+            handleError ("Ошибка во входных данных - коэффициент запаса для относительного свободного сечения колонны.", 2);
+            return false;
+        }
+        return true;
     }
-
-    std::vector <std::shared_ptr<SieveCalculationResults>> results;
-    std::vector <std::vector <std::pair<int, QString>>> messages;
-    std::vector <std::pair <int, QString>> message;
-
-    QString weirName;
+private:
     std::unordered_map<QString, QString> typeData;
     std::unordered_map<QString, double> geometryData;
     std::unordered_map<QString, double> fluidsData;
     std::unordered_map<QString, double> constantsData;
     std::unordered_map<QString, double> weirData;
-
-    bool checkInitData();
 
     std::unordered_map<QString, double> columnDiameterResults;
     bool calculateColumnDiameterData()
@@ -1075,4 +1268,4 @@ private:
     }
 };
 
-#endif // SIEVECALCULATIONS_H
+#endif // SIEVECALCULATION_H

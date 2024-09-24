@@ -23,7 +23,8 @@ SOURCES += \
     columnmodule.cpp
 
 HEADERS += \
-    CalculationModule/WeirTypes/sievecalculations.h \
+    CalculationModule/WeirTypes/calculationbase.h \
+    CalculationModule/WeirTypes/sievecalculation.h \
     CalculationModule/calculationmodule.h \
     # GraphViewModule/graphsectiondiagram.h \
     # GraphViewModule/graphviewmodule.h \
