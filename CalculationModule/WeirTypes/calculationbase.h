@@ -8,9 +8,10 @@ class CalculationBase : public QObject
 {
     Q_OBJECT
 public:
-    explicit CalculationBase(Column& column, std::shared_ptr<Section> section, QObject *parent = nullptr) : QObject(parent) {}
+    explicit CalculationBase(QObject *parent = nullptr) : QObject(parent) {}
     virtual ~CalculationBase() {};
 
+    virtual void performCalculations(Column& column, std::shared_ptr<Section> section) = 0;
     virtual std::vector<std::shared_ptr<CalculationResults>> fetchResults() { return results; }
     virtual std::vector<std::vector<std::pair<int, QString>>> fetchMessages() { return messages; }
 
