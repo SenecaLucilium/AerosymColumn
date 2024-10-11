@@ -10,8 +10,8 @@ class CalculationModule : public QObject
 {
     Q_OBJECT
 public:
-    explicit CalculationModule(QObject *parent = nullptr);
-    ~CalculationModule();
+    explicit CalculationModule(QObject *parent = nullptr) {};
+    ~CalculationModule() {};
 
     std::pair<std::vector<std::shared_ptr<CalculationResults>>, std::vector<std::vector<std::pair<int, QString>>>> performCalculations(Column& column)
     {

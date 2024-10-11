@@ -14,8 +14,7 @@
 
 #include "sectionscheme.h"
 #include "datatypes.h"
-#include "SectionDataModule/sectiondatamodule.h"
-// #include "CalculationModule/calculationmodule.h"
+#include "CalculationModule/calculationmodule.h"
 // #include "ResultsViewModule/resultsviewmodule.h"
 // #include "GraphViewModule/graphviewmodule.h"
 
@@ -29,11 +28,16 @@ public:
 
 private slots:
     void onTableChanged(int row, int col);
+    void onCalculationButtonClicked();
 
 private:
     Column& column;
     QStringList weirNamesList;
     std::vector<std::shared_ptr<Weir>> weirsList;
+    std::vector<std::shared_ptr<CalculationResults>> results;
+    std::vector<std::vector<std::pair<int, QString>>> messages;
+
+    CalculationModule* calcModule;
 
     bool ignoreSignals;
     bool activeError;

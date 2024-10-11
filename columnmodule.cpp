@@ -1,4 +1,5 @@
 #include "columnmodule.h"
+#include "SectionDataModule/sectiondatamodule.h"
 
 ColumnModule::ColumnModule(Column& initialData, QWidget *parent)
     : QMainWindow(parent), column(initialData)
@@ -64,10 +65,10 @@ ColumnModule::ColumnModule(Column& initialData, QWidget *parent)
 
     calculationContainer = new QWidget(mainWidget);
     {
-        // calcModule = new CalculationModule();
+        calcModule = new CalculationModule();
 
         calculationButton = new QPushButton("Выполнить вычисления", calculationContainer);
-        // connect(calculationButton, &QPushButton::clicked, this, &ColumnModule::onCalcButtonPushed);
+        connect(calculationButton, &QPushButton::clicked, this, &ColumnModule::onCalculationButtonClicked);
 
         resultsButton = new QPushButton("Графические результаты", calculationContainer);
         resultsButton->setDisabled(true);
@@ -191,15 +192,15 @@ void ColumnModule::addNewRow(Section& newSection)
     sectionsTable->setCellWidget(newRowIndex, 9, infoButton);
     connect(infoButton, &QPushButton::clicked, this, [this, newRowIndex, startComboBox, endComboBox]() {
         SectionDataModule* module = new SectionDataModule(column, newRowIndex, this);
-    //     if (results.size() != 0) {
-    //         std::vector <CalculationResults> subResults (results.begin() + startComboBox->currentIndex(), results.begin() + endComboBox->currentIndex() + 1);
-    //         module->receiveResults(subResults);
-    //     }
+        if (results.size() != 0) {
+            std::vector <std::shared_ptr<CalculationResults>> subResults (results.begin() + startComboBox->currentIndex(), results.begin() + endComboBox->currentIndex() + 1);
+            module->receiveResults(subResults);
+        }
 
-    //     if (messages.size() != 0) {
-    //         std::vector <std::vector<std::pair<int, QString>>> subMessages (messages.begin() + startComboBox->currentIndex(), messages.begin() + endComboBox->currentIndex() + 1);
-    //         module->receiveMessages(subMessages);
-    //     }
+        if (messages.size() != 0) {
+            std::vector <std::vector<std::pair<int, QString>>> subMessages (messages.begin() + startComboBox->currentIndex(), messages.begin() + endComboBox->currentIndex() + 1);
+            module->receiveMessages(subMessages);
+        }
 
         connect(module, &QDialog::finished, this, [this, newRowIndex](){
             ignoreSignals = true;
@@ -337,19 +338,21 @@ void ColumnModule::rearrangeWeirs()
     }
 }
 
-// void ColumnModule::onCalcButtonPushed()
-// {
-//     results.clear();
-//     messages.clear();
+void ColumnModule::onCalculationButtonClicked()
+{
+    results.clear();
+    messages.clear();
 
-//     // calcModule->performCalculations(column);
-//     // results = calcModule->fetchResults();
-//     // messages = calcModule->fetchMessages();
+    std::pair<std::vector<std::shared_ptr<CalculationResults>>, std::vector<std::vector<std::pair<int, QString>>>> calcResults;
+    calcResults = calcModule->performCalculations(column);
+
+    results = calcResults.first;
+    messages = calcResults.second;
 
 //     resultsButton->setEnabled(true);
 //     eraseButton->setEnabled(true);
 //     graphButton->setEnabled(true);
-// }
+}
 
 // void ColumnModule::onEraseButtonPushed()
 // {

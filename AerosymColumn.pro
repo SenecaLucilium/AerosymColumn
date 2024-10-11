@@ -17,8 +17,6 @@ SOURCES += \
     SectionDataModule/InitData/ParamsData/paramsdatatab.cpp \
     SectionDataModule/InitData/SummaryData/summarydatatab.cpp \
     SectionDataModule/InitData/initialdatatab.cpp \
-    SectionDataModule/Messages/messagestab.cpp \
-    SectionDataModule/sectiondatamodule.cpp \
     main.cpp \
     columnmodule.cpp
 
